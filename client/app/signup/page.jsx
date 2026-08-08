@@ -42,6 +42,7 @@ export default function SignUpPage() {
 
       if (res.data.message) {
         toast.success(res.data.message);
+        router.push("/login");
       }
 
       if (res.data.error) {
@@ -126,7 +127,7 @@ export default function SignUpPage() {
                     />
                   </div>
 
-                  <Button type="submit" className={`mt-3`} />
+                  <Button type="submit" className={`mt-3 w-full`} />
                 </div>
               )}
 

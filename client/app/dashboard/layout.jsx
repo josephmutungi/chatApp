@@ -5,92 +5,123 @@ import { color } from "framer-motion";
 import {
   CircleArrowDownIcon,
   MessageCircle,
+  MessageCirclePlus,
   Settings2Icon,
   UserCheck2,
+  UserCircle,
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { HiHome } from "react-icons/hi2";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
+import { getAllUsers } from "@/actions/usersActions";
+import UserCard from "@/ui/UserCard";
+import { usePathname, useRouter } from "next/navigation";
 
 const links = [
   {
-    name: "Overview",
-    icon: <HiHome />,
+    name: "Chat",
+    icon: <MessageCirclePlus size={20} />,
     href: "/dashboard",
   },
 
   {
-    name: "Messages",
-    icon: <MessageCircle />,
-    href: "/dashboard/messages",
-  },
-  {
     name: "Friends",
-    icon: <UserCheck2 />,
+    icon: <UserCheck2 size={20} />,
     href: "/dashboard/friends",
     color: "text-green-500",
   },
   {
     name: "Online",
-    icon: <CircleArrowDownIcon />,
+    icon: <CircleArrowDownIcon size={20} />,
     href: "/dashboard/online",
   },
   {
-    name: "Settings",
-    icon: <Settings2Icon />,
-    href: "/dashboard/settings",
+    name: "Profile",
+    icon: <UserCircle size={20} />,
+    href: "/dashboard/profile",
   },
 ];
 
 export default function AccountLayout({ children }) {
+  const router = useRouter();
+  const active = usePathname();
+
   const {
     data: response,
-    isLoading,
+    isLoading: loading,
     error,
   } = useQuery({
     queryKey: ["me"],
     queryFn: getMyProfile,
   });
 
+  const { data: resData, isLoading: loadingUsers } = useQuery({
+    queryKey: ["users"],
+    queryFn: getAllUsers,
+  });
   const user = response?.userData || null;
+  const users = resData?.resData;
 
+  const onLogout = async () => {
+    try {
+      const res = await api.post("/dashboard/logout");
+      alert(res.data.message);
+      router.refresh("/dashboard");
+      return true;
+    } catch (error) {
+      console.error(error?.response?.data?.error);
+    }
+  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center text-3xl">
+        Loading...
+      </div>
+    );
+  }
+  if (!user && !loading) {
+    router.replace("/");
+  }
   return (
-    <motion.main
-      initial={{ opacity: 0, y: -30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "linear" }}
-      className="mx-auto  h-[80vh] bg-gray-50 shadow-xl rounded-xl px-4"
-    >
-      <section className=" flex flex-col md:flex-row gap-6 p-6 md:py-15">
-        <header className="space-y-3 ">
-          <h1 className="bg-green-600 mb-8 text-white px-6 py-2 text-center rounded-t-lg text-sm font-serif font-bold">
-            Welcome <span>{user?.email}</span>
-          </h1>
-
-          <nav className="flex flex-row grow-0 space-x-4 md:flex-col bg-white p-4 md:py-10 shadow rounded-md">
-            {links.map((link, icon) => (
-              <Link
-                href={link.href}
-                className="flex space-x-1 space-y-6 px-3 py-1 hover:bg-gray-300 rounded-2xl"
-                key={link.name}
-              >
-                <span className={`${color}`}>{link.icon}</span>
-                <span className={``}>{link.name}</span>
-              </Link>
-            ))}
-          </nav>
-        </header>
-
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, ease: "linear" }}
-          className="w-full max-w-3xl md:w-2xl"
+    <div className="bg-white">
+      {user && (
+        <motion.main
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "linear" }}
+          className="bg-white md:w-5xl mx-auto"
         >
-          {children}
-        </motion.div>
-      </section>
-    </motion.main>
+          <section className="py-4 px-2 overflow-x-hidden">
+            <div className="space-y-3 mb-4 py-4 px-3 bg-gray-100 rounded-t-md font-extrabold text-blue-600 uppercase">
+              {user.email}
+            </div>
+            <div className="p-4 bg-white shadow-md flex  gap-5 text-xs md:text-sm rounded-2xl overflow-x-auto scrollbar-none">
+              {links.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`p-2 bg-gray-200 rounded-2xl flex justify-center items-center flex-col ${link.href === active ? "text-blue-600 font-bold" : "text-gray-700"}`}
+                >
+                  <span className="flex gap-2  justify-center items-center">
+                    <span>{link.icon}</span>
+                    <span>{link.name}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, ease: "linear" }}
+            className="flex flex-col p-4 overflow-x-hidden"
+          >
+            {children}
+          </motion.div>
+        </motion.main>
+      )}
+    </div>
   );
 }

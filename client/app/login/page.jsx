@@ -11,6 +11,7 @@ import toast, { ToastBar, Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [processing, setProcessing] = useState(false);
   const router = useRouter();
 
   const onChange = (e) => {
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const onLogin = async (e) => {
     e.preventDefault();
     try {
+      setProcessing(true);
       const res = await api.post("/auth/login", form);
       localStorage.setItem("token", res.data.token);
       console.log(res.data.token);
@@ -33,6 +35,8 @@ export default function LoginPage() {
       if (errMsg) {
         toast.error(errMsg);
       }
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -66,7 +70,9 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button type="submit">Login</Button>
+            <Button type="submit" className="w-full">
+              {processing ? "Logging in..." : "Login"}
+            </Button>
 
             <div>
               <Link

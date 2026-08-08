@@ -11,7 +11,7 @@ export default function Button({
     <button
       onClick={onClick}
       type={type}
-      className={`${className} p-2 w-full text-white bg-green-600 hover:bg-green-700 font-bold rounded-2xl`}
+      className={`${className} p-2  text-white bg-green-600 hover:bg-green-700 font-bold rounded-2xl`}
     >
       {text}
     </button>

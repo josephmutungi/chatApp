@@ -26,7 +26,6 @@ export const register = async (req, res) => {
 
     const user = new User({
       email: email,
-      phone: phone,
       password: hashedPassword,
     });
 
@@ -78,6 +77,10 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+  const user = req.user.userId;
+  if (!user) {
+    return res.status(400).json({ error: "No user id found" });
+  }
   try {
     const response = await res.clearCookie("token");
     return response.json({ message: "Logged out" }).status(200);
