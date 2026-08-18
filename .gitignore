@@ -1,11 +1,6 @@
+/client/.next
+/client/.env
+/client/node_modules
 
-
-client/node_modules
-server/node_modules
-
-client/.next/
-client/out
-
-
-client/.env
-server/.env
+/server/.env
+/server/node_modules

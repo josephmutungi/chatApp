@@ -1,98 +1,151 @@
 "use client";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getMyProfile } from "@/actions/authActions";
 import Button from "@/ui/Button";
-import { useQuery } from "@tanstack/react-query";
-import { div } from "framer-motion/client";
-import { MessageCircleIcon, UserCheck, UserCheck2Icon } from "lucide-react";
+import { MessageCircleIcon, UserCheck2Icon, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
-import React from "react";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
-  const {
-    data: response,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: response, isLoading } = useQuery({
     queryKey: ["me"],
     queryFn: getMyProfile,
   });
-  const router = useRouter();
+
   const user = response?.userData || null;
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 text-3xl">
-        Loading user...
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
+        <p className="text-gray-500 font-medium animate-pulse">
+          Setting the vibe...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gray-100 w-full mx-auto flex-col flex justify-center items-center p-4">
-      <h1 className="text-4xl mb-8 font-stretch-50% text-gray-900 font-extrabold">
-        Welcome to Lets Vibe
-      </h1>
-      <div className="mx-auto w-full md:max-w-3xl p-6 py-15 shadow rounded-3xl">
-        <h1 className="text-2xl text-center font-bold mb-5">Get Started</h1>
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-white to-green-50 flex flex-col justify-center items-center p-6">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-12"
+      >
+        <h1 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tight mb-4">
+          Lets{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+            Vibe
+          </span>
+        </h1>
+        <p className="text-gray-600 text-lg max-w-md mx-auto">
+          The modern way to connect, chat, and share the good energy with your
+          circle.
+        </p>
+      </motion.div>
+
+      {/* Main Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white/80 backdrop-blur-md border border-white shadow-2xl shadow-gray-200/50 rounded-[2.5rem] p-8 md:p-12 w-full max-w-xl"
+      >
         <div className="flex flex-col items-center">
-          <div className="relative">
+          {/* Avatar/Icon Section */}
+          <div className="mb-8">
             {user ? (
-              <div>
-                <div className="p-10 px-12 rounded-full bg-gray-100 shadow border border-gray-200 flex justify-cente flex-col items-center relative">
-                  <UserCheck2Icon size={60} />
-                  <p className="mt-2 text-xs font-extrabold text-gray-600 overflow-hidden">
-                    {user.email}
-                  </p>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                <div className="relative flex flex-col items-center justify-center w-32 h-32 bg-white rounded-full border border-gray-100 shadow-inner">
+                  <UserCheck2Icon size={48} className="text-blue-600" />
+                  <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
                 </div>
               </div>
             ) : (
-              <MessageCircleIcon size={70} className="text-green-600" />
+              <div className="w-24 h-24 bg-green-100 rounded-3xl flex items-center justify-center transform rotate-12">
+                <MessageCircleIcon
+                  size={48}
+                  className="text-green-600 -rotate-12"
+                />
+              </div>
             )}
           </div>
-        </div>
 
-        <div>
-          <div className="flex items-center justify-center gap-2 p-6">
-            <Link
-              href={"/signup"}
-              className="text-sm px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl"
-            >
-              {user ? "Add another account" : "Register"}
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {user ? "Welcome back!" : "Ready to vibe?"}
+            </h2>
+            <p className="text-gray-500 mt-1">
+              {user ? user.email : "Join thousands of others today."}
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            <Link href={user ? "/dashboard" : "/login"} className="w-full">
+              <Button
+                variant="primary"
+                className="w-full py-4 text-base shadow-lg shadow-blue-200"
+              >
+                {user ? "Open Dashboard" : "Login to Account"}
+                <ArrowRight size={18} />
+              </Button>
             </Link>
-            <Link
-              href={user ? "/dashboard" : "/login"}
-              className="transition-colors px-6 py-2 text-white text-sm shadow-2xl bg-green-600 hover:bg-green-700 s font-bold rounded-2xl"
-            >
-              {user ? "Start Chat" : "Login"}
+
+            <Link href="/signup" className="w-full">
+              <Button variant="secondary" className="w-full py-4 text-base">
+                {user ? "Add Account" : "Get Started"}
+              </Button>
             </Link>
           </div>
 
-          {!user && !isLoading && (
-            <div className="flex flex-col items-center">
-              <span className="text-3xl">
-                or <br />
-              </span>
-              <span className="text-sm text-gray-600">
-                Continue with google account
-              </span>
+          {/* Social Divider */}
+          {!user && (
+            <>
+              <div className="relative w-full my-10">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-100"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                  <span className="px-4 bg-white text-gray-400">
+                    Social Entry
+                  </span>
+                </div>
+              </div>
+
               <Link
-                href={"/google-auth"}
-                className="bg-gray-200 mt-2 w-full rounded-3xl flex justify-center items-center px-6"
+                href="/google-auth"
+                className="group flex items-center justify-center gap-3 w-full py-3.5 border-2 border-gray-50 rounded-2xl hover:bg-gray-50 hover:border-gray-100 transition-all duration-200"
               >
                 <Image
-                  src={"/google.webp"}
-                  alt="google-login"
-                  width={50}
-                  height={50}
+                  src="/google.webp"
+                  alt="Google"
+                  width={24}
+                  height={24}
+                  className="group-hover:scale-110 transition-transform"
                 />
-                <span className="text-gray-500">Google</span>
+                <span className="font-semibold text-gray-700">
+                  Continue with Google
+                </span>
               </Link>
-            </div>
+            </>
           )}
         </div>
-      </div>
+      </motion.div>
+
+      {/* Footer hint */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-8 text-sm text-gray-400"
+      >
+        Privacy focused. End-to-end encrypted.
+      </motion.p>
     </div>
   );
 }

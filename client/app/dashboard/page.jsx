@@ -1,76 +1,86 @@
 "use client";
+import React from "react";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 import { getMyProfile } from "@/actions/authActions";
 import ChatCard from "@/components/ChatCard";
 import ChatRoom from "@/components/ChatRoom";
-import Form from "@/components/Form";
-import api from "@/lib/api";
-import Input from "@/ui/Input";
-import UserCard from "@/ui/UserCard";
-import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { MessageSquareQuote } from "lucide-react";
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const recipientId = searchParams.get("recipientId");
-  const [oddMessages, setOddMessages] = useState([]);
 
-  const {
-    data: response,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: profileRes, isLoading: profileLoading } = useQuery({
     queryKey: ["me"],
     queryFn: getMyProfile,
   });
 
-  const {
-    data: msgs,
-    isLoading: msgsLoading,
-    error: msgsError,
-  } = useQuery({
+  const { data: msgsRes, isLoading: msgsLoading } = useQuery({
     queryKey: ["conversations"],
-    queryFn: () => {
-      const res = api.get("/dashboard/messages/conversations");
-      return res;
-    },
+    queryFn: () => api.get("/dashboard/messages/conversations"),
   });
 
-  const conversations = msgs?.data?.results;
-  // console.log(conversations);
+  const user = profileRes?.userData;
+  const conversations = msgsRes?.data?.results;
 
-  if (msgsLoading)
+  if (profileLoading || msgsLoading) {
     return (
-      <div className="p-10 flex justify-center items-center">
-        Loading user data and messages
+      <div className="flex h-full items-center justify-center p-12">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-500 font-medium">
+            Loading messages...
+          </p>
+        </div>
       </div>
     );
-
-  const user = response?.userData;
-
-  // Show loading state while fetching user
-  if (isLoading || !user?._id) {
-    return <p>Loading chat...</p>;
   }
 
   return (
-    <div className="bg-white">
-      <div className="flex gap-8 flex-col">
-        {conversations?.map((conversation) => (
-          <ChatCard
-            key={conversation.user._id}
-            recipientId={conversation.user._id}
-            conversation={conversation}
-            currentUserId={user._id}
-          />
-        ))}
+    <div className="flex h-full flex-col md:flex-row h-[75vh]">
+      {/* Conversations List Sidebar */}
+      <div className="w-full md:w-80 border-r border-gray-100 flex flex-col bg-gray-50/50">
+        <div className="p-4 border-b border-gray-100 bg-white">
+          <h2 className="font-bold text-gray-900">Messages</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-200">
+          {conversations?.length > 0 ? (
+            conversations.map((conv) => (
+              <ChatCard
+                key={conv.user._id}
+                recipientId={conv.user._id}
+                conversation={conv}
+                currentUserId={user?._id}
+                isActive={recipientId === conv.user._id}
+              />
+            ))
+          ) : (
+            <div className="text-center py-10 px-4">
+              <p className="text-sm text-gray-400">No conversations yet</p>
+            </div>
+          )}
+        </div>
       </div>
-      <ChatRoom
-        currentUserId={user?._id}
-        recipientId={recipientId}
-        // userMessages={oddMessages}
-      />
-      {/* <UserCard user={user} currentUserId={user._id} /> */}
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col bg-white">
+        {recipientId ? (
+          <ChatRoom currentUserId={user?._id} recipientId={recipientId} />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50/30">
+            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+              <MessageSquareQuote size={32} />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Select a chat</h3>
+            <p className="text-sm text-gray-500 max-w-xs mt-1">
+              Choose a conversation from the left to start vibing with your
+              friends.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

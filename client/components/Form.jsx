@@ -1,15 +1,14 @@
-import React from "react";
-
-function Form({ onSubmit, content, title = "Welcome", loading, onClose }) {
+export default function Form({ onSubmit, children, title, description }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-90 mx-auto bg-gray-100 shadow rounded-3xl mt-10 py-10 px-4"
+      className="w-full max-w-md mx-auto bg-white shadow-xl shadow-gray-200/50 rounded-3xl p-8 border border-gray-100"
     >
-      <h1 className="text-lg font-bold text-gray-900 mb-2">{title}</h1>
-      {content}
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        {description && <p className="text-gray-500 mt-2">{description}</p>}
+      </div>
+      <div className="space-y-5">{children}</div>
     </form>
   );
 }
-
-export default Form;

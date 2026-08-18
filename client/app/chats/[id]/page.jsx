@@ -1,73 +1,88 @@
 "use client";
-import { getAllConversations } from "@/actions/conversationsActions";
+import React from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, MoreVertical, Phone, Video } from "lucide-react";
 import ChatRoom from "@/components/ChatRoom";
 import api from "@/lib/api";
-import UserCard from "@/ui/UserCard";
-import { useQuery } from "@tanstack/react-query";
-import { User, UserCheck2 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
-import React from "react";
 
 export default function UserDetails() {
+  const router = useRouter();
   const params = useParams();
-  const userId = params.id;
-
   const searchParams = useSearchParams();
   const recipientId = searchParams.get("recipientId");
 
-  const {
-    data: userInfo,
-    isLoading,
-    error: userError,
-  } = useQuery({
-    //  Ensure the queryKey includes the ID so React Query doesn't cache the wrong user
-    queryKey: ["user", userId],
+  const { data: userInfo, isLoading: userLoading } = useQuery({
+    queryKey: ["user", recipientId],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/users/${userId}`);
-        return res.data;
-      } catch (error) {
-        console.error(error?.response?.data?.error);
-        return false;
-      }
+      const res = await api.get(`/users/${recipientId}`);
+      return res.data;
     },
+    enabled: !!recipientId,
   });
 
-  const {
-    data: msgs,
-    isLoading: msgsLoading,
-    error: msgsError,
-  } = useQuery({
+  const { data: messages, isLoading: msgsLoading } = useQuery({
     queryKey: ["conversationMessages", recipientId],
     queryFn: async () => {
-      if (!recipientId) return;
       const res = await api.get(
         `/dashboard/messages/conversations/history?userId2=${recipientId}`,
       );
       return res.data.messages;
     },
+    enabled: !!recipientId,
   });
 
-  const user = userInfo;
-
-  console.log(msgs);
-
-  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (userLoading || msgsLoading)
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-2">
+          <div className="w-10 h-10 bg-gray-200 rounded-full" />
+          <div className="h-2 w-20 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
 
   return (
-    <div className="h-screen bg-white flex flex-col fixed w-full">
-      <div className="h-screen mx-auto md:w-3xl space-y-8 scrollbar-none overflow-y-auto">
-        <h1 className="p-3 bg-blue-700  text-white font-extrabold mb-8 rounded-md">
-          Chat with {recipientId}
-        </h1>
-        <div>
-          <ChatRoom
-            currentUserId={user._id}
-            recipientId={recipientId}
-            userMessages={msgs}
-          />
+    <div className="flex flex-col h-full bg-white overflow-hidden md:w-4xl mx-auto">
+      {/* Chat Header Bar */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.back()} className="md:hidden p-1">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+            {userInfo?.email?.[0].toUpperCase()}
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 leading-none">
+              {userInfo?.email || "User"}
+            </h2>
+            <span className="text-[10px] text-green-500 font-medium">
+              Online
+            </span>
+          </div>
         </div>
+
+        <div className="flex items-center gap-1">
+          <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors">
+            <Phone size={18} />
+          </button>
+          <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors">
+            <Video size={18} />
+          </button>
+          <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors">
+            <MoreVertical size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Chat Room Area */}
+      <div className="flex-1 relative">
+        <ChatRoom
+          currentUserId={params.id} // Or however you get current user
+          recipientId={recipientId}
+          userMessages={messages}
+        />
       </div>
     </div>
   );
