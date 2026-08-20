@@ -13,6 +13,12 @@ import usersRoutes from "./routes/usersRoutes.js";
 dotenv.config();
 const app = express();
 const server = createServer(app);
+
+app.set("trust proxy", 1);
+
+app.use(express.json());
+app.use(cookieParser());
+
 const io = new Server(server, {
   cors: {
     origin: process.env.NEXT_BASE_URL,
@@ -20,10 +26,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-
-app.set("trust proxy", 1);
-app.use(express.json());
-app.use(cookieParser());
 
 const port = process.env.PORT || 5000;
 
@@ -33,6 +35,7 @@ app.use(
   cors({
     origin: process.env.NEXT_BASE_URL,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
 app.get("/", (req, res) => {

@@ -63,7 +63,10 @@ export const login = async (req, res) => {
     });
 
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, //7days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true, // Protects against XSS attacks
+      secure: process.env.NODE_ENV === "production", // Requires HTTPS in prod
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Crucial for cross-domain
     });
 
     return res.status(200).json({ message: "Login successful" });

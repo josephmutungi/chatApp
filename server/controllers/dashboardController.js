@@ -5,7 +5,7 @@ export const getMyProfile = async (req, res) => {
   const id = req.user.userId;
   if (!id) {
     console.log("No request Id");
-    return res.status(400);
+    return res.status(400).json({ error: "User Id missing from the request" });
   }
   try {
     const userProfile = await User.findById(id).select("-password");
